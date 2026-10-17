@@ -1,0 +1,11 @@
+Arjun Mehta
+arjun.mehta@example.com
+
+Experience
+Frontend Developer, WebStudio (2019 - 2024)
+- Built responsive web apps in React and TypeScript with JavaScript tooling
+- Managed Git workflows and CI/CD using GitHub Actions
+- Worked in an Agile scrum team and led a team of 3 developers
+
+Education
+B.E. Information Technology

@@ -1,0 +1,14 @@
+Machine Learning Engineer
+
+We are hiring an ML Engineer to build LLM-powered search and ranking products.
+
+Requirements:
+- 3+ years of experience building and shipping machine learning systems in production
+- Strong Python skills and experience with SQL
+- Hands-on experience with LLMs, prompt engineering and embeddings for semantic search
+- Experience building REST APIs and deploying services with Docker
+- Experience with AWS or another cloud platform
+
+Nice to have:
+- Kubernetes and MLOps experience
+- Experience with RAG pipelines and vector databases

@@ -1,0 +1,13 @@
+Priya Sharma
+priya.sharma@example.com | +91 98765 43210 | linkedin.com/in/priyasharma
+She is a machine learning engineer with 5 years of experience.
+
+Experience
+Senior ML Engineer, SearchCo (2020 - Present)
+- Built a semantic search service using embeddings and FAISS, serving 2M queries per day
+- Designed prompt engineering workflows with LLMs and a RAG pipeline for support documents
+- Deployed REST APIs with FastAPI in Docker containers on AWS (EC2, S3, Lambda)
+- Wrote Python and SQL data pipelines; set up MLflow for model monitoring (MLOps)
+
+Education
+M.S. Computer Science, 2018

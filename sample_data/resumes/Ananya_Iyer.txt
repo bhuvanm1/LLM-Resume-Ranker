@@ -1,0 +1,12 @@
+Ananya Iyer
+ananya.iyer@example.com
+
+Her background is in data analysis and reporting.
+Experience
+Data Analyst, RetailCorp (2022 - Present)
+- Built dashboards and ran statistics and A/B testing on sales data using Excel and SQL
+- Automated weekly reports with Python and pandas
+- Completed an online course in machine learning
+
+Education
+B.Sc Statistics

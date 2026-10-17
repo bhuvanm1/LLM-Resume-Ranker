@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resume Ranker</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1c2430;--mute:#667085;--line:#e4e7ec;--acc:#3b5bdb;--ok:#2f9e44;--bad:#e03131;--warn:#f08c00}
+@media(prefers-color-scheme:dark){:root{--bg:#12151a;--card:#1b2028;--ink:#e8ecf2;--mute:#9aa4b2;--line:#2a313c;--acc:#7c93ff}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+main{max-width:980px;margin:0 auto;padding:24px 16px}h1{margin:0 0 4px}p.sub{color:var(--mute);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+textarea{width:100%;min-height:150px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+label{font-weight:600;display:block;margin:8px 0 4px}input[type=file]{margin:4px 0}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:inherit;cursor:pointer}
+button:disabled{opacity:.6}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12.5px;margin:2px 3px 2px 0;border:1px solid var(--line)}
+.ok{color:var(--ok);border-color:var(--ok)}.bad{color:var(--bad);border-color:var(--bad)}.pref{color:var(--warn);border-color:var(--warn)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px}.score{font-size:28px;font-weight:700;color:var(--acc)}
+.bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:3px 0 8px}.bar i{display:block;height:100%;background:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:640px){.grid{grid-template-columns:1fr}}
+small,.mute{color:var(--mute)}details{margin-top:8px}summary{cursor:pointer;font-weight:600}
+blockquote{margin:4px 0;padding:4px 10px;border-left:3px solid var(--line);color:var(--mute)}
+</style></head><body><main>
+<h1>LLM Resume Ranker</h1><p class="sub">Upload resumes + a job description. Candidates are ranked blind (PII redacted), with explanations, skill gaps and a bias audit.</p>
+<div class="card">
+  <label>Job description</label><textarea id="jd" placeholder="Paste the job description…"></textarea>
+  <div class="mute">…or upload a file: <input type="file" id="jdfile" accept=".txt,.pdf,.docx"></div>
+  <label>Resumes (PDF / DOCX / TXT, multiple)</label><input type="file" id="resumes" multiple accept=".txt,.pdf,.docx">
+  <div class="row" style="margin-top:12px"><button id="go">Rank candidates</button><span id="status" class="mute"></span></div>
+</div>
+<div id="out"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pills=(a,c)=>a.length?a.map(x=>`<span class="pill ${c}">${esc(x)}</span>`).join(''):'<small>none</small>';
+const bar=(l,v)=>`<div><small>${l} ${(v*100).toFixed(0)}%</small><div class="bar"><i style="width:${v*100}%"></i></div></div>`;
+$('go').onclick=async()=>{
+  const fd=new FormData(); fd.append('job_description',$('jd').value);
+  if($('jdfile').files[0]) fd.append('job_file',$('jdfile').files[0]);
+  [...$('resumes').files].forEach(f=>fd.append('resumes',f));
+  $('go').disabled=true; $('status').textContent='Ranking…'; $('out').innerHTML='';
+  try{
+    const r=await fetch('/api/rank',{method:'POST',body:fd}); const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||'Request failed');
+    render(d); $('status').textContent='';
+  }catch(e){$('status').textContent='Error: '+e.message}
+  $('go').disabled=false;
+};
+function render(d){
+  let h=`<div class="card"><b>${esc(d.job.title)}</b><br><small>Required: ${d.job.required_skills.map(esc).join(', ')||'-'} · Preferred: ${d.job.preferred_skills.map(esc).join(', ')||'-'}</small><br>
+  <small>Embeddings: ${esc(d.embedding_backend)} · LLM: ${esc(d.llm_name)}</small></div>
+  <div class="card"><b>Fairness summary</b><br>${esc(d.fairness_summary)}</div>`;
+  for(const c of d.results){const s=c.scores;
+    h+=`<div class="card"><div class="head"><div><b>#${c.rank} ${esc(c.candidate)}</b><br><small>${c.profile.years_experience} yrs · ${esc(c.profile.job_titles.join(', '))}</small></div><div class="score">${s.final}</div></div>
+    <div class="grid">${bar('Semantic',s.semantic)}${bar('Skills',s.skills)}${bar('Experience',s.experience)}</div>
+    <p>${esc(c.explanation)}</p>
+    <div>Matched: ${pills(c.matched_required,'ok')}${pills(c.matched_preferred,'ok')}</div>
+    <div>Missing: ${pills(c.missing_required,'bad')}${pills(c.missing_preferred,'pref')}</div>
+    <details><summary>How to improve this resume</summary><ul>${c.improvements.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>
+    <details><summary>Why it matched (semantic evidence)</summary>${c.evidence.map(e=>`<blockquote><small>${esc(e.requirement)}</small><br>→ ${esc(e.best_resume_snippet)} <small>(sim ${e.similarity})</small></blockquote>`).join('')}</details>
+    <details><summary>Bias audit</summary><p>${esc(c.bias.verdict)}</p><small>Raw score ${c.bias.score_with_pii} → blind ${c.bias.score_blind} (Δ ${c.bias.score_delta}) · gender-swap Δ ${c.bias.counterfactual_gender_delta} · rank raw ${c.bias.rank_with_pii} / blind ${c.bias.rank_blind}</small><br>${c.bias.flagged_terms.map(t=>`<span class="pill">${esc(t)}</span>`).join('')}</details></div>`;}
+  $('out').innerHTML=h;
+}
+</script></body></html>

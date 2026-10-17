@@ -1,0 +1,12 @@
+Rahul Verma
+rahul.verma@example.com | +91 91234 56780
+He is married with two kids. Age: 41.
+
+Experience
+Software Engineer, FinServe (2016 - 2023)
+- Developed Java and Python backend services and REST APIs for payments
+- Wrote complex SQL queries on PostgreSQL; deployed with Docker on AWS
+- Trained a basic machine learning churn model with scikit-learn
+
+Education
+B.Tech Computer Science, graduated 2012
